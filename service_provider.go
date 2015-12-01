@@ -13,7 +13,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -30,6 +29,11 @@ type ServiceProvider struct {
 	MetadataURL string
 	LogoutURL   string
 	AcsURL      string
+
+	// If true then *do not* sign auth requests.
+	// (the sense of this parameter is backward so the zero-value default is
+	// to sign requests)
+	DontSignAuthnRequests bool
 
 	IDPMetadata *Metadata
 }
@@ -50,14 +54,30 @@ func (sp *ServiceProvider) Metadata() *Metadata {
 	}
 
 	return &Metadata{
-		EntityID:   sp.MetadataURL,
-		ValidUntil: timeNow().Add(DefaultValidDuration),
+		EntityID:      sp.MetadataURL,
+		ValidUntil:    timeNow().Add(DefaultValidDuration),
+		CacheDuration: "P5M",
+		Extensions: &Extensions{
+			DigestMethods: []EncryptionMethod{
+				{Algorithm: "http://www.w3.org/2000/09/xmldsig#sha1"},
+			},
+			SigningMethods: []EncryptionMethod{
+				{Algorithm: "http://www.w3.org/2000/09/xmldsig#rsa-sha1"},
+			},
+		},
 		SPSSODescriptor: &SPSSODescriptor{
-			AuthnRequestsSigned:        false,
+			AuthnRequestsSigned:        !sp.DontSignAuthnRequests,
 			WantAssertionsSigned:       true,
 			ProtocolSupportEnumeration: "urn:oasis:names:tc:SAML:2.0:protocol",
 			KeyDescriptor: []KeyDescriptor{
 				KeyDescriptor{
+					Use: "signing",
+					KeyInfo: KeyInfo{
+						Certificate: sp.Certificate,
+					},
+				},
+				KeyDescriptor{
+					Use: "encryption",
 					KeyInfo: KeyInfo{
 						Certificate: sp.Certificate,
 					},
@@ -82,21 +102,6 @@ func (sp *ServiceProvider) Metadata() *Metadata {
 	}
 }
 
-func (sp *ServiceProvider) redirectSign(message string) (string, error) {
-	hash := sha1.Sum([]byte(message))
-
-	block, _ := pem.Decode([]byte(sp.Key))
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return "", err
-	}
-	sig, err := rsa.SignPKCS1v15(randReader, privateKey, crypto.SHA1, hash[:])
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(sig), nil
-}
-
 func (sp *ServiceProvider) MakeRedirectAuthenticationRequest(relayState string) (*url.URL, error) {
 	idpURL, err := url.Parse(sp.IDPRedirectURL())
 	if err != nil {
@@ -107,6 +112,9 @@ func (sp *ServiceProvider) MakeRedirectAuthenticationRequest(relayState string) 
 	if err != nil {
 		return nil, err
 	}
+
+	x, _ := xml.Marshal(req)
+	fmt.Printf("%s", x)
 
 	w := &bytes.Buffer{}
 	w1 := base64.NewEncoder(base64.StdEncoding, w)
@@ -123,19 +131,24 @@ func (sp *ServiceProvider) MakeRedirectAuthenticationRequest(relayState string) 
 		query.Set("RelayState", relayState)
 	}
 
-	if false {
+	if !sp.DontSignAuthnRequests {
 		query.Set("SigAlg", "http://www.w3.org/2000/09/xmldsig#rsa-sha1")
 		idpURL.RawQuery = query.Encode()
 
-		signature, err := sp.redirectSign(idpURL.RawQuery)
+		hash := sha1.Sum([]byte(idpURL.RawQuery))
+
+		privateKeyPEMBlock, _ := pem.Decode([]byte(sp.Key))
+		privateKey, err := x509.ParsePKCS1PrivateKey(privateKeyPEMBlock.Bytes)
 		if err != nil {
 			return nil, err
 		}
-		query.Set("Signature", signature)
+		sig, err := rsa.SignPKCS1v15(randReader, privateKey, crypto.SHA1, hash[:])
+		if err != nil {
+			return nil, err
+		}
+		query.Set("Signature", base64.StdEncoding.EncodeToString(sig))
 	}
 	idpURL.RawQuery = query.Encode()
-
-	ioutil.WriteFile("auth_request", []byte(idpURL.String()), 0644)
 
 	return idpURL, nil
 }

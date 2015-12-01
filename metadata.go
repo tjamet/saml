@@ -13,13 +13,16 @@ type EntitiesDescriptor struct {
 type Metadata struct {
 	XMLName          xml.Name          `xml:"urn:oasis:names:tc:SAML:2.0:metadata EntityDescriptor"`
 	ValidUntil       time.Time         `xml:"validUntil,attr"`
-	CacheDuration    time.Duration     `xml:"cacheDuration,attr,omitempty"`
+	CacheDuration    string            `xml:"cacheDuration,attr,omitempty"`
 	EntityID         string            `xml:"entityID,attr"`
+	Extensions       *Extensions       `xml:"Extensions"`
 	SPSSODescriptor  *SPSSODescriptor  `xml:"SPSSODescriptor"`
 	IDPSSODescriptor *IDPSSODescriptor `xml:"IDPSSODescriptor"`
-	// Organization -- TODO
-	// Contacts -- TODO
-	//Signature *xmldsig.Signature
+}
+
+type Extensions struct {
+	DigestMethods  []EncryptionMethod `xml:"urn:oasis:names:tc:SAML:metadata:algsupport DigestMethod"`
+	SigningMethods []EncryptionMethod `xml:"urn:oasis:names:tc:SAML:metadata:algsupport SigningMethod"`
 }
 
 type KeyDescriptor struct {

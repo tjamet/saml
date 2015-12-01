@@ -97,7 +97,7 @@ func PostACS(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<a href=\"%s\">Continue</a>", redirectURI)
 }
 
-var samlBinding = "post"
+var samlBinding = "redirect"
 
 // RequireAccount is middleware that requires the request contain a valid token
 func RequireAccount(c *web.C, h http.Handler) http.Handler {
@@ -191,7 +191,7 @@ func main() {
 	secret = make([]byte, 32)
 	rand.Read(secret)
 
-	baseURL := "https://15661444.ngrok.io"
+	baseURL := "https://60ebe93b.ngrok.io"
 
 	samlsp = &saml.ServiceProvider{
 		MetadataURL: baseURL + "/saml2/metadata",
