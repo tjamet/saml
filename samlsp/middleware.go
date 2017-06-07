@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"net/textproto"
 	"strings"
 	"time"
 
@@ -325,8 +326,9 @@ func (m *Middleware) IsAuthorized(r *http.Request) bool {
 	// It is an error for the request to include any X-SAML* headers,
 	// because those might be confused with ours. If we encounter any
 	// such headers, we abort the request, so there is no confustion.
+	samlHeaderPrefix := textproto.CanonicalMIMEHeaderKey("X-Saml")
 	for headerName := range r.Header {
-		if strings.HasPrefix(headerName, "X-Saml") {
+		if strings.HasPrefix(headerName, samlHeaderPrefix) {
 			panic("X-Saml-* headers should not exist when this function is called")
 		}
 	}
