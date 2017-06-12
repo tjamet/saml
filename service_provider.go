@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/xml"
@@ -75,7 +76,22 @@ type ServiceProvider struct {
 
 	// Logger is used to log messages for example in the event of errors
 	Logger logger.Interface
+
+	// SignAuthnRequest is either DoSignAuthnRequest or DontSignAuthnRequest
+	SignAuthnRequest SignAuthnRequestMode
 }
+
+// SignAuthnRequestMode tells the service provider if it should sign
+// AuthnRequests with the provided key.
+type SignAuthnRequestMode int
+
+const (
+	// DoSignAuthnRequest tells ServiceProvider to sign AuthnRequests
+	DoSignAuthnRequest SignAuthnRequestMode = iota
+
+	// DontSignAuthnRequest tells ServiceProvider not to sign AuthnRequests
+	DontSignAuthnRequest
+)
 
 // MaxIssueDelay is the longest allowed time between when a SAML assertion is
 // issued by the IDP and the time it is received by ParseResponse. This is used
@@ -274,6 +290,31 @@ func (sp *ServiceProvider) MakeAuthenticationRequest(idpURL string) (*AuthnReque
 			Format: &nameIDFormat,
 		},
 	}
+
+	if sp.SignAuthnRequest == DoSignAuthnRequest {
+		keyPair := tls.Certificate{
+			Certificate: [][]byte{sp.Certificate.Raw},
+			PrivateKey:  sp.Key,
+			Leaf:        sp.Certificate,
+		}
+		keyStore := dsig.TLSCertKeyStore(keyPair)
+
+		signingContext := dsig.NewDefaultSigningContext(keyStore)
+		signingContext.Canonicalizer = dsig.MakeC14N10ExclusiveCanonicalizerWithPrefixList(canonicalizerPrefixList)
+		if err := signingContext.SetSignatureMethod(dsig.RSASHA1SignatureMethod); err != nil {
+			return nil, err
+		}
+
+		reqEl := req.Element()
+		signedReqEl, err := signingContext.SignEnveloped(reqEl)
+		if err != nil {
+			return nil, err
+		}
+
+		sigEl := signedReqEl.Child[len(signedReqEl.Child)-1]
+		req.Signature = sigEl.(*etree.Element)
+	}
+
 	return &req, nil
 }
 

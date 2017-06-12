@@ -70,10 +70,11 @@ func (test *ServiceProviderTest) SetUpTest(c *C) {
 
 func (test *ServiceProviderTest) TestCanSetAuthenticationNameIDFormat(c *C) {
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 
 	// defaults to "transient"
@@ -102,11 +103,12 @@ func (test *ServiceProviderTest) TestCanSetAuthenticationNameIDFormat(c *C) {
 
 func (test *ServiceProviderTest) TestCanProduceMetadata(c *C) {
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://example.com/saml2/metadata"),
-		AcsURL:      mustParseURL("https://example.com/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://example.com/saml2/metadata"),
+		AcsURL:           mustParseURL("https://example.com/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -146,11 +148,12 @@ func (test *ServiceProviderTest) TestCanProduceRedirectRequest(c *C) {
 	}
 	Clock = dsig.NewFakeClockAt(TimeNow())
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -171,11 +174,12 @@ func (test *ServiceProviderTest) TestCanProducePostRequest(c *C) {
 		return rv
 	}
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -243,11 +247,12 @@ uzZ1y9sNHH6kH8GFnvS2MqyHiNz0h0Sq/q6n+w==</ds:X509Certificate>
 </EntityDescriptor>
 `
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://29ee6d2e.ngrok.io/saml/metadata"),
-		AcsURL:      mustParseURL("https://29ee6d2e.ngrok.io/saml/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://29ee6d2e.ngrok.io/saml/metadata"),
+		AcsURL:           mustParseURL("https://29ee6d2e.ngrok.io/saml/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -355,11 +360,12 @@ PUkfbaYHQGP6IS0lzeCeDX0wab3qRoh7/jJt5/BR8Iwf</ds:X509Certificate>
 </md:EntityDescriptor>`
 
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://29ee6d2e.ngrok.io/saml/metadata"),
-		AcsURL:      mustParseURL("https://29ee6d2e.ngrok.io/saml/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://29ee6d2e.ngrok.io/saml/metadata"),
+		AcsURL:           mustParseURL("https://29ee6d2e.ngrok.io/saml/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -409,11 +415,12 @@ PUkfbaYHQGP6IS0lzeCeDX0wab3qRoh7/jJt5/BR8Iwf</ds:X509Certificate>
 
 func (test *ServiceProviderTest) TestCanParseResponse(c *C) {
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -546,11 +553,12 @@ func (test *ServiceProviderTest) TestCanParseResponse(c *C) {
 
 func (test *ServiceProviderTest) TestInvalidResponses(c *C) {
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -614,11 +622,12 @@ func (test *ServiceProviderTest) TestInvalidResponses(c *C) {
 
 func (test *ServiceProviderTest) TestInvalidAssertions(c *C) {
 	s := ServiceProvider{
-		Key:         test.Key,
-		Certificate: test.Certificate,
-		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              test.Key,
+		Certificate:      test.Certificate,
+		MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(test.IDPMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -708,11 +717,12 @@ DgefdDXhYNmeuQtwGtcu/FI66atQMNTDoChXJQ==</ds:Modulus><ds:Exponent>AQAB</ds:Expon
 	}
 	Clock = dsig.NewFakeClockAt(TimeNow())
 	s := ServiceProvider{
-		Key:         key2017,
-		Certificate: cert2017,
-		MetadataURL: mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/metadata"),
-		AcsURL:      mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              key2017,
+		Certificate:      cert2017,
+		MetadataURL:      mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/metadata"),
+		AcsURL:           mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(idpMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)
@@ -792,11 +802,12 @@ DgefdDXhYNmeuQtwGtcu/FI66atQMNTDoChXJQ==</ds:Modulus><ds:Exponent>AQAB</ds:Expon
 	Clock = dsig.NewFakeClockAt(TimeNow())
 
 	s := ServiceProvider{
-		Key:         key2017,
-		Certificate: cert2017,
-		MetadataURL: mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/metadata"),
-		AcsURL:      mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/acs"),
-		IDPMetadata: &EntityDescriptor{},
+		Key:              key2017,
+		Certificate:      cert2017,
+		MetadataURL:      mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/metadata"),
+		AcsURL:           mustParseURL("https://preview.docrocket-ross.test.octolabs.io/saml/acs"),
+		IDPMetadata:      &EntityDescriptor{},
+		SignAuthnRequest: DontSignAuthnRequest,
 	}
 	err := xml.Unmarshal([]byte(idpMetadata), &s.IDPMetadata)
 	c.Assert(err, IsNil)

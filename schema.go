@@ -39,7 +39,6 @@ type AuthnRequest struct {
 	ProviderName                   string `xml:",attr"`
 }
 
-// Element returns an etree.Element representing the object
 // Element returns an etree.Element representing the object in XML form.
 func (r *AuthnRequest) Element() *etree.Element {
 	el := etree.NewElement("samlp:AuthnRequest")

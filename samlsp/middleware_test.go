@@ -69,12 +69,13 @@ func (test *MiddlewareTest) SetUpTest(c *C) {
 
 	test.Middleware = Middleware{
 		ServiceProvider: saml.ServiceProvider{
-			Key:         test.Key,
-			Certificate: test.Certificate,
-			MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
-			AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
-			IDPMetadata: &saml.EntityDescriptor{},
-			Logger:      logger.DefaultLogger,
+			Key:              test.Key,
+			Certificate:      test.Certificate,
+			MetadataURL:      mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+			AcsURL:           mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+			IDPMetadata:      &saml.EntityDescriptor{},
+			Logger:           logger.DefaultLogger,
+			SignAuthnRequest: saml.DontSignAuthnRequest,
 		},
 		CookieName:   "ttt",
 		CookieMaxAge: time.Hour * 2,
