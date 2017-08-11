@@ -76,6 +76,8 @@ func (test *MiddlewareTest) SetUpTest(c *C) {
 			Logger:      logger.DefaultLogger,
 		},
 		JwtSigningMethod: jwt.SigningMethodHS256,
+		JwtSigningKey:    x509.MarshalPKCS1PrivateKey(test.Key),
+		JwtVerifyKey:     x509.MarshalPKCS1PrivateKey(test.Key),
 		TokenMaxAge:      time.Hour * 2,
 	}
 	cookieStore := ClientCookies{

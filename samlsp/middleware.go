@@ -50,6 +50,7 @@ type Middleware struct {
 	ClientToken       ClientToken
 	JwtSigningMethod  jwt.SigningMethod
 	JwtSigningKey     crypto.PrivateKey
+	JwtVerifyKey      crypto.PublicKey
 }
 
 func randomBytes(n int) []byte {
@@ -168,7 +169,7 @@ func (m *Middleware) getPossibleRequestIDs(r *http.Request) []string {
 			ValidMethods: []string{m.JwtSigningMethod.Alg()},
 		}
 		token, err := jwtParser.Parse(value, func(t *jwt.Token) (interface{}, error) {
-			return m.JwtSigningKey, nil
+			return m.JwtVerifyKey, nil
 		})
 		if err != nil || !token.Valid {
 			m.ServiceProvider.Logger.Printf("... invalid token %s", err)
@@ -203,7 +204,7 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 			ValidMethods: []string{m.JwtSigningMethod.Alg()},
 		}
 		state, err := jwtParser.Parse(stateValue, func(t *jwt.Token) (interface{}, error) {
-			return m.JwtSigningKey, nil
+			return m.JwtVerifyKey, nil
 		})
 		if err != nil || !state.Valid {
 			m.ServiceProvider.Logger.Printf("Cannot decode state JWT: %s (%s)", err, stateValue)
@@ -270,7 +271,7 @@ func (m *Middleware) GetAuthorizationToken(r *http.Request) *AuthorizationToken 
 
 	tokenClaims := AuthorizationToken{}
 	token, err := jwt.ParseWithClaims(tokenStr, &tokenClaims, func(t *jwt.Token) (interface{}, error) {
-		return m.JwtSigningKey, nil
+		return m.JwtVerifyKey, nil
 	})
 	if err != nil || !token.Valid {
 		m.ServiceProvider.Logger.Printf("ERROR: invalid token: %s", err)
