@@ -50,7 +50,7 @@ type Middleware struct {
 	ClientToken       ClientToken
 }
 
-var jwtSigningMethod = jwt.SigningMethodHS256
+var jwtSigningMethod jwt.SigningMethod = jwt.SigningMethodHS256
 
 func randomBytes(n int) []byte {
 	rv := make([]byte, n)
@@ -166,7 +166,7 @@ func (m *Middleware) getPossibleRequestIDs(r *http.Request) []string {
 	rv := []string{}
 	for _, value := range m.ClientState.GetStates(r) {
 		jwtParser := jwt.Parser{
-			ValidMethods: []string{jwtSigningMethod.Name},
+			ValidMethods: []string{jwtSigningMethod.Alg()},
 		}
 		token, err := jwtParser.Parse(value, func(t *jwt.Token) (interface{}, error) {
 			secretBlock := x509.MarshalPKCS1PrivateKey(m.ServiceProvider.Key)
@@ -204,7 +204,7 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 		}
 
 		jwtParser := jwt.Parser{
-			ValidMethods: []string{jwtSigningMethod.Name},
+			ValidMethods: []string{jwtSigningMethod.Alg()},
 		}
 		state, err := jwtParser.Parse(stateValue, func(t *jwt.Token) (interface{}, error) {
 			return secretBlock, nil
