@@ -63,6 +63,7 @@ func New(opts Options) (*Middleware, error) {
 		AllowIDPInitiated: opts.AllowIDPInitiated,
 		TokenMaxAge:       tokenMaxAge,
 		JwtSigningMethod:  jwt.SigningMethodHS256,
+		JwtSigningKey:     x509.MarshalPKCS1PrivateKey(opts.Key),
 	}
 
 	cookieStore := ClientCookies{
