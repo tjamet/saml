@@ -48,9 +48,8 @@ type Middleware struct {
 	TokenMaxAge       time.Duration
 	ClientState       ClientState
 	ClientToken       ClientToken
+	JwtSigningMethod  jwt.SigningMethod
 }
-
-var jwtSigningMethod jwt.SigningMethod = jwt.SigningMethodHS256
 
 func randomBytes(n int) []byte {
 	rv := make([]byte, n)
@@ -129,7 +128,7 @@ func (m *Middleware) RequireAccount(handler http.Handler) http.Handler {
 		relayState := base64.URLEncoding.EncodeToString(randomBytes(42))
 
 		secretBlock := x509.MarshalPKCS1PrivateKey(m.ServiceProvider.Key)
-		state := jwt.New(jwtSigningMethod)
+		state := jwt.New(m.JwtSigningMethod)
 		claims := state.Claims.(jwt.MapClaims)
 		claims["id"] = req.ID
 		claims["uri"] = r.URL.String()
@@ -166,7 +165,7 @@ func (m *Middleware) getPossibleRequestIDs(r *http.Request) []string {
 	rv := []string{}
 	for _, value := range m.ClientState.GetStates(r) {
 		jwtParser := jwt.Parser{
-			ValidMethods: []string{jwtSigningMethod.Alg()},
+			ValidMethods: []string{m.JwtSigningMethod.Alg()},
 		}
 		token, err := jwtParser.Parse(value, func(t *jwt.Token) (interface{}, error) {
 			secretBlock := x509.MarshalPKCS1PrivateKey(m.ServiceProvider.Key)
@@ -204,7 +203,7 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 		}
 
 		jwtParser := jwt.Parser{
-			ValidMethods: []string{jwtSigningMethod.Alg()},
+			ValidMethods: []string{m.JwtSigningMethod.Alg()},
 		}
 		state, err := jwtParser.Parse(stateValue, func(t *jwt.Token) (interface{}, error) {
 			return secretBlock, nil
@@ -244,7 +243,7 @@ func (m *Middleware) Authorize(w http.ResponseWriter, r *http.Request, assertion
 			}
 		}
 	}
-	signedToken, err := jwt.NewWithClaims(jwtSigningMethod,
+	signedToken, err := jwt.NewWithClaims(m.JwtSigningMethod,
 		claims).SignedString(secretBlock)
 	if err != nil {
 		panic(err)

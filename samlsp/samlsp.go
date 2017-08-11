@@ -14,6 +14,7 @@ import (
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/logger"
+	"github.com/dgrijalva/jwt-go"
 )
 
 const defaultTokenMaxAge = time.Hour
@@ -61,6 +62,7 @@ func New(opts Options) (*Middleware, error) {
 		},
 		AllowIDPInitiated: opts.AllowIDPInitiated,
 		TokenMaxAge:       tokenMaxAge,
+		JwtSigningMethod:  jwt.SigningMethodHS256,
 	}
 
 	cookieStore := ClientCookies{

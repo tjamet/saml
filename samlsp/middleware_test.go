@@ -75,7 +75,8 @@ func (test *MiddlewareTest) SetUpTest(c *C) {
 			IDPMetadata: &saml.EntityDescriptor{},
 			Logger:      logger.DefaultLogger,
 		},
-		TokenMaxAge: time.Hour * 2,
+		JwtSigningMethod: jwt.SigningMethodHS256,
+		TokenMaxAge:      time.Hour * 2,
 	}
 	cookieStore := ClientCookies{
 		ServiceProvider: &test.Middleware.ServiceProvider,
